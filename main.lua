@@ -1,1 +1,183 @@
-local ScreenGui = Instance.new("ScreenGui") local MainFrame = Instance.new("Frame") local Title = Instance.new("TextLabel") local AimbotBtn = Instance.new("TextButton") local WallhackBtn = Instance.new("TextButton") local Version = Instance.new("TextLabel") local ToggleBtn = Instance.new("TextButton") local Players = game:GetService("Players") local RunService = game:GetService("RunService") local LocalPlayer = Players.LocalPlayer local Camera = workspace.CurrentCamera ScreenGui.Parent = game.CoreGui MainFrame.Parent = ScreenGui MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40) MainFrame.BorderSizePixel = 0 MainFrame.Position = UDim2.new(0.35, 0, 0.3, 0) MainFrame.Size = UDim2.new(0, 300, 0, 200) MainFrame.Active = true MainFrame.Draggable = true Title.Parent = MainFrame Title.BackgroundTransparency = 1 Title.Size = UDim2.new(1, 0, 0, 40) Title.Text = "ViewWare" Title.TextScaled = true Title.Font = Enum.Font.SourceSansBold local uiGradient = Instance.new("UIGradient") uiGradient.Color = ColorSequence.new{ ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 0)), ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 0)) } uiGradient.Parent = Title AimbotBtn.Parent = MainFrame AimbotBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0) AimbotBtn.Size = UDim2.new(0.8, 0, 0, 40) AimbotBtn.Position = UDim2.new(0.1, 0, 0.3, 0) AimbotBtn.TextColor3 = Color3.fromRGB(255, 255, 255) AimbotBtn.Font = Enum.Font.SourceSansBold AimbotBtn.TextScaled = true AimbotBtn.Text = "AimBot: OFF" WallhackBtn.Parent = MainFrame WallhackBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0) WallhackBtn.Size = UDim2.new(0.8, 0, 0, 40) WallhackBtn.Position = UDim2.new(0.1, 0, 0.55, 0) WallhackBtn.TextColor3 = Color3.fromRGB(255, 255, 255) WallhackBtn.Font = Enum.Font.SourceSansBold WallhackBtn.TextScaled = true WallhackBtn.Text = "WallHack: OFF" Version.Parent = MainFrame Version.BackgroundTransparency = 1 Version.Size = UDim2.new(1, -10, 0, 20) Version.Position = UDim2.new(0, 5, 1, -25) Version.TextColor3 = Color3.fromRGB(255, 255, 255) Version.Font = Enum.Font.SourceSans Version.TextSize = 16 Version.Text = "v 0.1.0 [beta]" ToggleBtn.Parent = ScreenGui ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0) ToggleBtn.Size = UDim2.new(0, 30, 0, 30) ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255) ToggleBtn.Font = Enum.Font.SourceSansBold ToggleBtn.TextScaled = true ToggleBtn.Text = "-" local aimbotEnabled = false local wallhackEnabled = false local guiVisible = true local function getClosestPlayer() local closest, dist = nil, math.huge for _, player in ipairs(Players:GetPlayers()) do if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then local mag = (player.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude if mag < dist then dist = mag closest = player end end end return closest end RunService.RenderStepped:Connect(function() if aimbotEnabled then local target = getClosestPlayer() if target and target.Character and target.Character:FindFirstChild("Head") then Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position) end end end) local function createESP(player) if player.Character and not player.Character:FindFirstChild("ViewWareHighlight") then local highlight = Instance.new("Highlight") highlight.Name = "ViewWareHighlight" highlight.FillTransparency = 1 highlight.OutlineColor = Color3.fromRGB(255, 255, 255) highlight.OutlineTransparency = 0 highlight.Parent = player.Character end end local function removeESP(player) if player.Character and player.Character:FindFirstChild("ViewWareHighlight") then player.Character.ViewWareHighlight:Destroy() end end AimbotBtn.MouseButton1Click:Connect(function() aimbotEnabled = not aimbotEnabled if aimbotEnabled then AimbotBtn.Text = "AimBot: ON" else AimbotBtn.Text = "AimBot: OFF" end end) WallhackBtn.MouseButton1Click:Connect(function() wallhackEnabled = not wallhackEnabled if wallhackEnabled then WallhackBtn.Text = "WallHack: ON" for _, player in ipairs(Players:GetPlayers()) do if player ~= LocalPlayer then createESP(player) end end else WallhackBtn.Text = "WallHack: OFF" for _, player in ipairs(Players:GetPlayers()) do if player ~= LocalPlayer then removeESP(player) end end end end) Players.PlayerAdded:Connect(function(player) player.CharacterAdded:Connect(function() if wallhackEnabled then task.wait(1) createESP(player) end end) end) ToggleBtn.MouseButton1Click:Connect(function() guiVisible = not guiVisible MainFrame.Visible = guiVisible if guiVisible then ToggleBtn.Text = "-" else ToggleBtn.Text = "+" end end) local function updateTogglePosition() local framePos = MainFrame.Position local frameSize = MainFrame.Size ToggleBtn.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + frameSize.X.Offset - 35, framePos.Y.Scale, framePos.Y.Offset - 35) end MainFrame:GetPropertyChangedSignal("Position"):Connect(updateTogglePosition) MainFrame:GetPropertyChangedSignal("Size"):Connect(updateTogglePosition) updateTogglePosition()
+Admins = {}
+Banned = {}
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+if Banned[LocalPlayer.Name] then
+    return
+end
+
+local function isAdmin(player)
+    for _, name in ipairs(Admins) do
+        if name == player.Name then
+            return true
+        end
+    end
+    return false
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local AimbotBtn = Instance.new("TextButton")
+local WallhackBtn = Instance.new("TextButton")
+local Version = Instance.new("TextLabel")
+local ToggleBtn = Instance.new("TextButton")
+
+ScreenGui.Parent = game.CoreGui
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.35, 0, 0.3, 0)
+MainFrame.Size = UDim2.new(0, 300, 0, 200)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+Title.Parent = MainFrame
+Title.BackgroundTransparency = 1
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Text = "ViewWare"
+Title.TextScaled = true
+Title.Font = Enum.Font.SourceSansBold
+
+local uiGradient = Instance.new("UIGradient")
+uiGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 0))
+}
+uiGradient.Parent = Title
+
+AimbotBtn.Parent = MainFrame
+AimbotBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+AimbotBtn.Size = UDim2.new(0.8, 0, 0, 40)
+AimbotBtn.Position = UDim2.new(0.1, 0, 0.3, 0)
+AimbotBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AimbotBtn.Font = Enum.Font.SourceSansBold
+AimbotBtn.TextScaled = true
+AimbotBtn.Text = "AimBot: OFF"
+
+WallhackBtn.Parent = MainFrame
+WallhackBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+WallhackBtn.Size = UDim2.new(0.8, 0, 0, 40)
+WallhackBtn.Position = UDim2.new(0.1, 0, 0.55, 0)
+WallhackBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+WallhackBtn.Font = Enum.Font.SourceSansBold
+WallhackBtn.TextScaled = true
+WallhackBtn.Text = "WallHack: OFF"
+
+Version.Parent = MainFrame
+Version.BackgroundTransparency = 1
+Version.Size = UDim2.new(1, -10, 0, 20)
+Version.Position = UDim2.new(0, 5, 1, -25)
+Version.TextColor3 = Color3.fromRGB(255, 255, 255)
+Version.Font = Enum.Font.SourceSans
+Version.TextSize = 16
+Version.Text = "v 0.1.0 [beta]"
+
+ToggleBtn.Parent = ScreenGui
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ToggleBtn.Size = UDim2.new(0, 30, 0, 30)
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.TextScaled = true
+ToggleBtn.Text = "-"
+
+local aimbotEnabled = false
+local wallhackEnabled = false
+local guiVisible = true
+
+local function getClosestPlayer()
+    local closest, dist = nil, math.huge
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local mag = (player.Character.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+            if mag < dist then
+                dist = mag
+                closest = player
+            end
+        end
+    end
+    return closest
+end
+
+RunService.RenderStepped:Connect(function()
+    if aimbotEnabled then
+        local target = getClosestPlayer()
+        if target and target.Character and target.Character:FindFirstChild("Head") then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.Head.Position)
+        end
+    end
+end)
+
+local function createESP(player)
+    if player.Character and not player.Character:FindFirstChild("ViewWareHighlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "ViewWareHighlight"
+        highlight.FillTransparency = 1
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        highlight.OutlineTransparency = 0
+        highlight.Parent = player.Character
+    end
+end
+
+local function removeESP(player)
+    if player.Character and player.Character:FindFirstChild("ViewWareHighlight") then
+        player.Character.ViewWareHighlight:Destroy()
+    end
+end
+
+AimbotBtn.MouseButton1Click:Connect(function()
+    aimbotEnabled = not aimbotEnabled
+    if aimbotEnabled then
+        AimbotBtn.Text = "AimBot: ON"
+    else
+        AimbotBtn.Text = "AimBot: OFF"
+    end
+end)
+
+WallhackBtn.MouseButton1Click:Connect(function()
+    wallhackEnabled = not wallhackEnabled
+    if wallhackEnabled then
+        WallhackBtn.Text = "WallHack: ON"
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then createESP(player) end
+        end
+    else
+        WallhackBtn.Text = "WallHack: OFF"
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then removeESP(player) end
+        end
+    end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        if wallhackEnabled then
+            task.wait(1)
+            createESP(player)
+        end
+    end)
+end)
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    guiVisible = not guiVisible
+    MainFrame.Visible = guiVisible
+    if guiVisible then
+        ToggleBtn.Text = "-"
+    else
+        ToggleBtn.Text = "+"
+    end
+end)
+
+local function updateTogglePosition()
+    local framePos = MainFrame.Position
+    local frameSize = MainFrame.Size
+    ToggleBtn.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + frameSize.X.Offset - 35, framePos.Y.Scale, framePos.Y.Offset - 35)
+end
+
+MainFrame:GetPropertyChangedSignal("Position"):Connect(updateTogglePosition)
+MainFrame:GetPropertyChangedSignal("Size"):Connect(updateTogglePosition)
+updateTogglePosition()
